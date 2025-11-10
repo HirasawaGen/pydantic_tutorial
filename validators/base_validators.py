@@ -10,7 +10,8 @@ from functools import lru_cache
 
 class BaseValidator(ABC):
     source_type: type
-    namespace: dict[str, Any]
+    validate_obj: Any
+    symbol_namespace: dict[str, Any]
     
     @abstractmethod
     def validate(self, value: Any) -> Any:
@@ -22,9 +23,10 @@ class BaseValidator(ABC):
         handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
         locals_namespace = getattr(handler._get_types_namespace().locals, 'data', {})
+        global_namespace = handler._get_types_namespace().globals
         decorated_func = locals_namespace.get('func')
         self.source_type = source_type
-        self.namespace = getattr(decorated_func, '__validate_namespace__', {})
+        self.validate_obj = decorated_func
         def function(value: Any, handler: Callable):
             return self.validate(value)
         return core_schema.no_info_wrap_validator_function(
